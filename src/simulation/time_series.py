@@ -343,6 +343,7 @@ class ScenarioGenerator:
         if len(net.load) > 0:
             for idx in net.load.index:
                 name = net.load.at[idx, 'name'] if 'name' in net.load.columns else ''
+                name = name if name is not None else ''
                 peak = net.load.at[idx, 'p_mw']
 
                 if 'industrial' in name.lower():

@@ -211,11 +211,14 @@ class NetworkGenerator:
     ) -> int:
         """Add a line between two buses."""
         # Calculate distance-based length
-        if self._net.bus_geodata is not None and len(self._net.bus_geodata) > max(from_bus, to_bus):
-            x1, y1 = self._net.bus_geodata.at[from_bus, 'x'], self._net.bus_geodata.at[from_bus, 'y']
-            x2, y2 = self._net.bus_geodata.at[to_bus, 'x'], self._net.bus_geodata.at[to_bus, 'y']
-            length_km = np.sqrt((x2 - x1)**2 + (y2 - y1)**2) / 1000
-        else:
+        try:
+            if 'bus_geodata' in self._net and len(self._net.bus_geodata) > max(from_bus, to_bus):
+                x1, y1 = self._net.bus_geodata.at[from_bus, 'x'], self._net.bus_geodata.at[from_bus, 'y']
+                x2, y2 = self._net.bus_geodata.at[to_bus, 'x'], self._net.bus_geodata.at[to_bus, 'y']
+                length_km = np.sqrt((x2 - x1)**2 + (y2 - y1)**2) / 1000
+            else:
+                length_km = self._rng.uniform(0.5, 2.0)
+        except (KeyError, AttributeError):
             length_km = self._rng.uniform(0.5, 2.0)
 
         length_km = max(0.1, length_km)
