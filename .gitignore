@@ -1,0 +1,161 @@
+# GRIZLI .gitignore
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# GRIZLI specific
+
+# Model files (large)
+models/ppo_grid/*.zip
+models/ppo_grid/best_model*
+models/ppo_grid/final_model*
+
+# Grid2Op environments (generated)
+grid2op_envs/
+
+# SMART-DS data (large)
+data/smartds/
+*.dss
+
+# Demo outputs
+demo_output.png
+*.png
+*.jpg
+*.jpeg
+!docs/*.png
+
+# Logs
+*.log
+logs/
+tensorboard_logs/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Local configuration
+config.local.yaml
+*.local.yaml
+
+# Database files
+*.db
+*.sqlite
+
+# Pickle files
+*.pkl
+*.pickle
+
+# Large data files
+*.csv
+*.parquet
+*.h5
+*.hdf5
+
+# Keep data directory structure
+!data/.gitkeep
+!models/.gitkeep

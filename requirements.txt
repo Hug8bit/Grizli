@@ -1,0 +1,41 @@
+# GRIZLI - Grid Reconfiguration Intelligence for Zero-Loss Integration
+# Core dependencies
+
+# Power system simulation
+pandapower>=2.13.0
+networkx>=3.0
+
+# Optimization
+pulp>=2.7.0
+
+# Data processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Visualization & Dashboard
+streamlit>=1.30.0
+plotly>=5.18.0
+matplotlib>=3.7.0
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+
+# ============================================
+# Optional: Reinforcement Learning (Grid2Op)
+# Uncomment to enable RL features
+# ============================================
+# grid2op>=1.9.0
+# lightsim2grid>=0.7.0
+# stable-baselines3>=2.0.0
+# torch>=2.0.0
+# gymnasium>=0.28.0
+# tensorboard>=2.14.0
+
+# ============================================
+# Development dependencies
+# ============================================
+# pytest>=7.0
+# pytest-cov>=4.0
+# black>=23.0
+# ruff>=0.1.0
