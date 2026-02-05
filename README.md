@@ -14,6 +14,7 @@ GRIZLI optimizes power grid operations by dynamically reconfiguring network topo
 
 ## Features
 
+### Core Engine
 - **Network Generation**: Create IEEE standard networks (14, 33 bus) or custom synthetic networks
 - **Power Flow Simulation**: AC power flow using Newton-Raphson (PandaPower)
 - **Fast Optimization**: Greedy topology optimization in <1 second
@@ -21,6 +22,11 @@ GRIZLI optimizes power grid operations by dynamically reconfiguring network topo
 - **24h Time Series**: Simulate daily scenarios with solar/wind/load profiles
 - **Interactive Dashboard**: Streamlit-based visualization and control
 - **RL Agent**: Experimental PPO agent using Grid2Op (optional)
+
+### Advanced Analytics
+- **Voltage Stability Index (D)**: Energy-function-based stability assessment per bus. Identifies the weakest bus and quantifies the distance to voltage collapse (D = -1 threshold). Monotone and reliable near critical operating points, unlike the classical L-index.
+- **Total Voltage Deviation (TVD)**: Continuous voltage quality metric (sum of |V_i - 1.0| across all buses). Provides optimization gradient for voltage profile improvement, beyond simple binary violation counting.
+- **Beta-Distributed Solar Irradiance**: Physically accurate solar generation model using Beta distribution (bounded [0,1], asymmetric) instead of Gaussian noise, matching empirical irradiance patterns from research literature.
 
 ## Quick Start
 
@@ -194,6 +200,44 @@ After:  Line A at 85%  ──────────────> Balanced
    - Big-M formulation for on/off constraints
    - Minimize: congestion + losses + switching cost
 
+### Voltage Quality Assessment
+
+GRIZLI provides two complementary voltage metrics beyond simple threshold-based violation counting:
+
+**Total Voltage Deviation (TVD)**
+```
+TVD = sum(|V_i - 1.0|) for all buses
+```
+A continuous metric that quantifies overall voltage quality. Lower is better (0 = perfect). Used as optimization signal and time-series KPI.
+
+**Voltage Stability Index D (Energy Function Method)**
+```
+D = E / Delta_E    where -1 < D < 0 = stable, D = -1 = collapse threshold
+```
+Per-bus stability assessment based on the energy distance to voltage collapse. Identifies the weakest bus in the network and quantifies the stability margin. Unlike the classical L-index, the D index remains monotone and physically meaningful near the critical point.
+
+```python
+from src.simulation.power_flow import PowerFlowSimulator
+
+sim = PowerFlowSimulator(net)
+result = sim.run_power_flow()
+
+# Continuous voltage quality
+print(f"TVD: {result.total_voltage_deviation:.4f} pu")
+
+# Stability assessment
+vs = result.voltage_stability
+print(f"Weakest bus: {vs.weakest_bus}, D = {vs.stability_margin:.4f}")
+print(f"Voltage stable: {vs.is_voltage_stable}")
+```
+
+### Solar Generation Model
+
+Solar irradiance variability uses a **Beta distribution** (bounded [0,1], asymmetric) parameterized from cloud cover data, replacing the traditional Gaussian noise approach. This provides:
+- Physically bounded output (never negative, never exceeds capacity)
+- Asymmetric distribution matching real irradiance statistics
+- Configurable via `cloud_variability` parameter (0.0 = clear sky, 0.5 = heavy clouds)
+
 ## Requirements
 
 - Python 3.9, 3.10, or 3.11
@@ -224,6 +268,18 @@ After:  Line A at 85%  ──────────────> Balanced
 | Losses reduction | 5-20% |
 | Fast optimizer time | <1 second |
 | MILP optimizer time | ~10 seconds |
+| TVD computation | <1 ms (post power flow) |
+| Stability index D | <50 ms (33-bus network) |
+
+### Output Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `congestion_metric` | float | Quadratic overload penalty sum |
+| `total_voltage_deviation` | float | TVD = sum(\|V_i - 1.0\|), continuous quality |
+| `voltage_stability.stability_margin` | float | Min D index (-1 = collapse threshold) |
+| `voltage_stability.weakest_bus` | int | Most vulnerable bus index |
+| `voltage_stability.is_voltage_stable` | bool | All buses above collapse threshold |
 
 ## Contributing
 

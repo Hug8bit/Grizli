@@ -73,9 +73,14 @@ class ScenarioGenerator:
         peak_hour: float = 12.0
     ) -> pd.Series:
         """
-        Generate solar generation profile.
+        Generate solar generation profile using Beta distribution for irradiance.
 
-        Uses Gaussian curve centered at peak_hour with cloud variability.
+        Uses a Gaussian envelope for the diurnal shape, then applies Beta-distributed
+        irradiance variability instead of Gaussian noise. The Beta distribution is
+        physically more accurate for solar irradiance because it is bounded on [0, 1]
+        and can be asymmetric (unlike Gaussian which is unbounded and symmetric).
+
+        Reference: Hachemi et al., Energy Reports 12 (2024) 1623-1637, Eqs. 2-4.
 
         Args:
             capacity_mw: Peak capacity in MW
@@ -105,7 +110,7 @@ class ScenarioGenerator:
         sunrise = peak_hour - day_length / 2
         sunset = peak_hour + day_length / 2
 
-        # Gaussian profile
+        # Gaussian envelope for diurnal shape
         sigma = day_length / 4
         base_profile = np.exp(-((hours - peak_hour) ** 2) / (2 * sigma ** 2))
 
@@ -116,11 +121,24 @@ class ScenarioGenerator:
             0
         )
 
-        # Add cloud variability
-        noise = self._rng.normal(0, self.config.cloud_variability, len(hours))
-        noise = np.clip(noise, -0.5, 0.5)
+        # Beta-distributed irradiance variability
+        # Mean irradiance factor mu ~ 1-cloud_variability, bounded [0, 1]
+        mu = max(0.05, min(0.95, 1.0 - self.config.cloud_variability))
+        # Concentration parameter controls spread (higher = less variance)
+        kappa = 20.0  # Moderate concentration
+        alpha_param = mu * kappa
+        beta_param = (1.0 - mu) * kappa
 
-        profile = base_profile * (1 + noise) * seasonal_factor * capacity_mw
+        # Generate Beta samples for daylight hours, 1.0 for night (will be zeroed)
+        daylight_mask = (hours >= sunrise) & (hours <= sunset)
+        irradiance_factor = np.ones(len(hours))
+        n_daylight = daylight_mask.sum()
+        if n_daylight > 0:
+            irradiance_factor[daylight_mask] = self._rng.beta(
+                alpha_param, beta_param, size=n_daylight
+            )
+
+        profile = base_profile * irradiance_factor * seasonal_factor * capacity_mw
         profile = np.maximum(profile, 0)
 
         return pd.Series(
@@ -429,12 +447,17 @@ class TimeSeriesSimulator:
                     min_voltage = self.net.res_bus.vm_pu.min()
                     max_voltage = self.net.res_bus.vm_pu.max()
                     num_overloaded = (self.net.res_line.loading_percent > 100).sum()
+                    # Total Voltage Deviation
+                    tvd = float(np.sum(np.abs(
+                        self.net.res_bus.vm_pu.values - 1.0
+                    )))
                 else:
                     max_loading = 0
                     total_losses = 0
                     min_voltage = 1
                     max_voltage = 1
                     num_overloaded = 0
+                    tvd = 0.0
 
                 total_gen = self.net.sgen.p_mw.sum() if len(self.net.sgen) > 0 else 0
                 total_load = self.net.load.p_mw.sum() if len(self.net.load) > 0 else 0
@@ -449,6 +472,7 @@ class TimeSeriesSimulator:
                     'num_overloaded': num_overloaded,
                     'total_generation_mw': total_gen,
                     'total_load_mw': total_load,
+                    'total_voltage_deviation': tvd,
                 })
 
                 if verbose and (i + 1) % 10 == 0:
@@ -491,6 +515,8 @@ class TimeSeriesSimulator:
             "mean_losses_mw": float(df.total_losses_mw.mean()),
             "min_voltage_overall": float(df.min_voltage_pu.min()),
             "max_voltage_overall": float(df.max_voltage_pu.max()),
+            "tvd_mean": float(df.total_voltage_deviation.mean()),
+            "tvd_max": float(df.total_voltage_deviation.max()),
         }
 
     def get_hourly_summary(self) -> pd.DataFrame:
