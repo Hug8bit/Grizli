@@ -851,6 +851,79 @@ def page_fonctionnement():
             )
             st.plotly_chart(fig_stab, use_container_width=True)
 
+    # ─── Section 3.2 : Limites thermiques ──────────────────────────────────────
+    st.subheader("3.2 Limites thermiques des lignes (max_i_ka)")
+
+    st.markdown("""
+    La **congestion** survient quand le courant dans une ligne depasse sa **capacite thermique**.
+
+    #### Pourquoi c'est important ?
+
+    - Les reseaux IEEE de PandaPower ont par defaut `max_i_ka = 99999` (aucune limite)
+    - Avec ces valeurs irrealistes, `loading_percent` est toujours ~0%, donc **jamais de congestion**
+    - GRIZLI corrige ce probleme en definissant des limites realistes
+
+    #### Comment GRIZLI calcule les limites ?
+
+    ```python
+    # Capacite basee sur l'impedance de ligne (conducteurs plus epais = moins de resistance)
+    r_total = r_ohm_per_km * length_km
+    capacity_factor = sqrt(r_median / r_total)  # Normalise autour de la mediane
+    max_i_ka = base_capacity * capacity_factor  # Base = 0.3 kA pour distribution
+    ```
+
+    #### Valeurs typiques en distribution MT (12-20 kV)
+
+    | Type de ligne | max_i_ka | Amperes |
+    |---------------|----------|---------|
+    | Cable souterrain leger | 0.15 - 0.25 kA | 150-250 A |
+    | Ligne aerienne standard | 0.25 - 0.35 kA | 250-350 A |
+    | Cable/ligne renforce | 0.35 - 0.50 kA | 350-500 A |
+
+    #### Formule de loading
+
+    ```
+    loading_percent = (I_actual / max_i_ka) * 100
+
+    - loading < 80%   : OK (vert)
+    - 80% < loading < 100% : WARNING (orange)
+    - loading > 100%  : CONGESTION (rouge) - surcharge thermique !
+    ```
+
+    Une ligne a 120% risque la surchauffe et la degradation acceleree du conducteur.
+    """)
+
+    # Demo: afficher les limites d'un reseau
+    if st.button("Voir les limites thermiques du IEEE 33-bus"):
+        from src.core.ieee_networks import create_ieee33_with_renewables
+        demo_net = create_ieee33_with_renewables(seed=42)
+
+        st.markdown("**Limites thermiques calculees par GRIZLI :**")
+        limits_df = demo_net.line[['from_bus', 'to_bus', 'max_i_ka']].copy()
+        limits_df['max_i_ka'] = limits_df['max_i_ka'].round(3)
+        limits_df['capacite_A'] = (limits_df['max_i_ka'] * 1000).astype(int)
+
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            fig_limits = go.Figure()
+            fig_limits.add_trace(go.Bar(
+                x=[f"L{i}" for i in limits_df.index],
+                y=limits_df['max_i_ka'],
+                marker_color='steelblue'
+            ))
+            fig_limits.update_layout(
+                title="Capacite thermique par ligne (kA)",
+                xaxis_title="Ligne",
+                yaxis_title="max_i_ka",
+                height=300
+            )
+            st.plotly_chart(fig_limits, use_container_width=True)
+
+        with col2:
+            st.metric("min(max_i_ka)", f"{limits_df['max_i_ka'].min():.3f} kA")
+            st.metric("max(max_i_ka)", f"{limits_df['max_i_ka'].max():.3f} kA")
+            st.metric("moyenne", f"{limits_df['max_i_ka'].mean():.3f} kA")
+
     # ─── Section 4 : Modele solaire ───────────────────────────────────────────
     st.markdown("---")
     st.header("4. Modele de generation solaire")

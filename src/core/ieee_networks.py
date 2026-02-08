@@ -9,6 +9,57 @@ import pandapower as pp
 import pandapower.networks as pn
 
 
+def _set_realistic_line_limits(net: pp.pandapowerNet, base_capacity_ka: float = 0.3) -> None:
+    """
+    Set realistic thermal limits (max_i_ka) for distribution lines.
+
+    The IEEE test cases from PandaPower come with max_i_ka = 99999 (unlimited),
+    which is unrealistic. This function sets proper thermal limits based on
+    line impedance characteristics.
+
+    Method: Lines with lower resistance have thicker conductors and thus
+    higher thermal capacity. We scale max_i_ka inversely with resistance.
+
+    Typical distribution line capacities (12-20 kV):
+    - Small cables/lines: 0.15 - 0.25 kA (150-250 A)
+    - Medium cables/lines: 0.25 - 0.35 kA (250-350 A)
+    - Large cables/lines: 0.35 - 0.50 kA (350-500 A)
+
+    Args:
+        net: PandaPower network to modify (in place)
+        base_capacity_ka: Base thermal capacity for average lines (default 0.3 kA)
+    """
+    # Get line resistances (total, not per km)
+    if 'r_ohm_per_km' in net.line.columns and 'length_km' in net.line.columns:
+        r_total = net.line['r_ohm_per_km'] * net.line['length_km']
+    else:
+        # Fallback: use uniform capacity
+        net.line['max_i_ka'] = base_capacity_ka
+        return
+
+    # Avoid division by zero
+    r_total = r_total.replace(0, r_total[r_total > 0].min() if (r_total > 0).any() else 0.01)
+
+    # Calculate capacity: lower resistance = higher capacity
+    # Normalize around the median resistance
+    r_median = r_total.median()
+    if r_median <= 0:
+        r_median = 0.1
+
+    # Capacity factor: lines with half the median resistance get 1.4x capacity
+    # Lines with double the median resistance get 0.7x capacity
+    capacity_factor = np.sqrt(r_median / r_total)
+
+    # Clamp to reasonable range [0.5, 2.0]
+    capacity_factor = np.clip(capacity_factor, 0.5, 2.0)
+
+    # Set max_i_ka
+    net.line['max_i_ka'] = base_capacity_ka * capacity_factor
+
+    # Ensure minimum capacity of 0.1 kA
+    net.line.loc[net.line['max_i_ka'] < 0.1, 'max_i_ka'] = 0.1
+
+
 def create_ieee33_with_renewables(
     num_pv: int = 3,
     num_wind: int = 2,
@@ -39,6 +90,9 @@ def create_ieee33_with_renewables(
     # Create base IEEE 33-bus network
     net = pn.case33bw()
     net.name = "IEEE 33-bus with Renewables"
+
+    # Set realistic thermal limits (PandaPower default is 99999 kA = unlimited)
+    _set_realistic_line_limits(net, base_capacity_ka=0.3)
 
     # Mark existing lines as switchable
     if 'is_switch' not in net.line.columns:
@@ -149,36 +203,36 @@ def create_atacama_scenario(seed: Optional[int] = None) -> pp.pandapowerNet:
     """
     Create an extreme solar scenario inspired by Atacama Desert.
 
-    Simulates a network with massive solar penetration causing
-    severe reverse power flow and congestion.
+    Simulates a network with high solar penetration causing
+    reverse power flow and congestion on feeder lines.
 
     Args:
         seed: Random seed
 
     Returns:
-        Extremely congested PandaPower network
+        Congested PandaPower network with high solar penetration
     """
     net = create_ieee33_with_renewables(
-        num_pv=8,
+        num_pv=6,
         num_wind=2,
-        pv_capacity_mw=4.0,
-        wind_capacity_mw=3.0,
+        pv_capacity_mw=2.5,
+        wind_capacity_mw=2.0,
         add_tie_lines=True,
         seed=seed
     )
     net.name = "IEEE 33-bus Atacama Scenario"
 
-    # Triple the solar output (peak desert conditions)
+    # Increase solar output (peak desert conditions)
     for idx in net.sgen.index:
         if net.sgen.at[idx, 'type'] == 'PV':
-            net.sgen.at[idx, 'p_mw'] *= 3.0
+            net.sgen.at[idx, 'p_mw'] *= 1.8
 
     # Reduce load (midday when people are at work)
-    net.load.p_mw *= 0.7
-    net.load.q_mvar *= 0.7
+    net.load.p_mw *= 0.6
+    net.load.q_mvar *= 0.6
 
-    # Critical line capacity constraints
-    net.line.max_i_ka *= 0.7
+    # Constrained infrastructure (old lines)
+    net.line.max_i_ka *= 0.65
 
     return net
 
@@ -205,6 +259,9 @@ def create_ieee14_with_renewables(
 
     net = pn.case14()
     net.name = "IEEE 14-bus with Renewables"
+
+    # Set realistic thermal limits (higher for transmission: 0.8 kA base)
+    _set_realistic_line_limits(net, base_capacity_ka=0.8)
 
     if 'is_switch' not in net.line.columns:
         net.line['is_switch'] = True
