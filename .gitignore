@@ -146,9 +146,10 @@ config.local.yaml
 *.db
 *.sqlite
 
-# Pickle files
+# Pickle / serialised model files
 *.pkl
 *.pickle
+*.joblib
 
 # Large data files
 *.csv
