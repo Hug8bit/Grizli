@@ -1,41 +1,48 @@
-# GRIZLI - Grid Reconfiguration Intelligence for Zero-Loss Integration
-# Core dependencies
+# GRIZLI — Grid Reconfiguration Intelligence for Zero-Loss Integration
+# Full dependency list (Python 3.11+)
 
-# Power system simulation
+# ── Power system simulation ───────────────────────────────────────────────────
 pandapower>=2.13.0
 networkx>=3.0
 
-# Optimization
+# ── Optimisation ─────────────────────────────────────────────────────────────
 pulp>=2.7.0
 
-# Data processing
+# ── Data processing ───────────────────────────────────────────────────────────
 numpy>=1.24.0
 pandas>=2.0.0
 
-# Visualization & Dashboard
+# ── Machine learning ──────────────────────────────────────────────────────────
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# ── HTTP / DataSF API ─────────────────────────────────────────────────────────
+requests>=2.31.0
+httpx>=0.26.0
+
+# ── FastAPI backend ───────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# ── Visualisation (legacy Streamlit app) ──────────────────────────────────────
 streamlit>=1.30.0
 plotly>=5.18.0
 matplotlib>=3.7.0
 
-# Utilities
+# ── Utilities ─────────────────────────────────────────────────────────────────
 tqdm>=4.65.0
 pyyaml>=6.0
 
-# ============================================
-# Optional: Reinforcement Learning (Grid2Op)
-# Uncomment to enable RL features
-# ============================================
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# ── Reinforcement learning (optional — heavy deps) ────────────────────────────
 # grid2op>=1.9.0
 # lightsim2grid>=0.7.0
 # stable-baselines3>=2.0.0
 # torch>=2.0.0
 # gymnasium>=0.28.0
 # tensorboard>=2.14.0
-
-# ============================================
-# Development dependencies
-# ============================================
-# pytest>=7.0
-# pytest-cov>=4.0
-# black>=23.0
-# ruff>=0.1.0
