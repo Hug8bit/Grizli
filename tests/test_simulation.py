@@ -46,28 +46,28 @@ class TestPowerFlow:
     def test_power_flow_runs(self, ieee33_net):
         from src.simulation.power_flow import PowerFlowSimulator
         sim = PowerFlowSimulator(ieee33_net)
-        result = sim.run()
+        result = sim.run_power_flow()
         assert result.converged
 
     def test_power_flow_voltages_in_range(self, ieee33_net):
         from src.simulation.power_flow import PowerFlowSimulator
         sim = PowerFlowSimulator(ieee33_net)
-        result = sim.run()
+        result = sim.run_power_flow()
         assert result.converged
-        voltages = result.bus_voltages_pu
+        voltages = result.voltage_pu
         assert (voltages > 0.85).all()
         assert (voltages < 1.15).all()
 
     def test_power_flow_returns_losses(self, ieee33_net):
         from src.simulation.power_flow import PowerFlowSimulator
         sim = PowerFlowSimulator(ieee33_net)
-        result = sim.run()
+        result = sim.run_power_flow()
         assert result.total_losses_mw >= 0
 
     def test_power_flow_loading_nonnegative(self, ieee33_net):
         from src.simulation.power_flow import PowerFlowSimulator
         sim = PowerFlowSimulator(ieee33_net)
-        result = sim.run()
+        result = sim.run_power_flow()
         assert (result.line_loading_percent >= 0).all()
 
 
