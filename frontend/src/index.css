@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* React Flow overrides for dark mode */
+.react-flow__background { background-color: #0f172a; }
+.react-flow__controls button { background: #1e293b; border-color: #334155; color: #94a3b8; }
+.react-flow__controls button:hover { background: #334155; }
+.react-flow__minimap { background: #1e293b; }
+
+/* Leaflet dark adjustments */
+.leaflet-container { background: #0f172a; }
+.leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
