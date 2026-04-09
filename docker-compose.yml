@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+
+  # ── FastAPI backend ──────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grizli-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models   # persist trained ML models
+    environment:
+      - MODEL_DIR=models
+      - CORS_ORIGINS=http://localhost,http://localhost:3000,http://localhost:5173
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── React frontend (dev mode with hot-reload) ────────────────────────────
+  frontend-dev:
+    image: node:20-alpine
+    container_name: grizli-frontend-dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── React frontend (production build + nginx) ────────────────────────────
+  # Uncomment to use the production build instead of dev mode:
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.frontend
+  #   container_name: grizli-frontend
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
