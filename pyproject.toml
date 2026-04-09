@@ -1,92 +1,65 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "grizli"
-version = "1.0.0"
-description = "Grid Reconfiguration Intelligence for Zero-Loss Integration"
+name = "grizli-v2"
+version = "2.0.0"
+description = "GrizliV2 — Grid optimization platform powered by RL. Waze for Electricity."
 readme = "README.md"
-license = {text = "MIT"}
-requires-python = ">=3.9"
-authors = [
-    {name = "GRIZLI Team"}
-]
-keywords = [
-    "power-systems",
-    "smart-grid",
-    "optimization",
-    "network-reconfiguration",
-    "pandapower",
-    "grid2op"
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering",
-]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["smart-grid", "reinforcement-learning", "power-systems", "optimization", "latam"]
+
 dependencies = [
-    "pandapower>=2.13.0",
+    # Power system simulation
+    "pandapower>=2.13",
     "networkx>=3.0",
-    "pulp>=2.7.0",
-    "numpy>=1.24.0",
-    "pandas>=2.0.0",
-    "streamlit>=1.30.0",
-    "plotly>=5.18.0",
-    "matplotlib>=3.7.0",
-    "tqdm>=4.65.0",
-    "pyyaml>=6.0",
+    # API
+    "fastapi>=0.112",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "websockets>=12.0",
+    # Data
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scipy>=1.11",
 ]
 
 [project.optional-dependencies]
 rl = [
-    "grid2op>=1.9.0",
-    "lightsim2grid>=0.7.0",
-    "stable-baselines3>=2.0.0",
-    "torch>=2.0.0",
-    "gymnasium>=0.28.0",
-    "tensorboard>=2.14.0",
+    "stable-baselines3>=2.3",
+    "torch>=2.0",
+    "gymnasium>=0.29",
+    "grid2op>=1.10",
+    "lightsim2grid>=0.8",
 ]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "black>=23.0",
-    "ruff>=0.1.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",       # for FastAPI test client
+    "ruff>=0.5",
+    "black>=24.0",
 ]
-all = [
-    "grizli[rl,dev]",
-]
-
-[project.urls]
-Homepage = "https://github.com/YourUsername/grizli"
-Documentation = "https://github.com/YourUsername/grizli#readme"
-Repository = "https://github.com/YourUsername/grizli.git"
-Issues = "https://github.com/YourUsername/grizli/issues"
+all = ["grizli-v2[rl,dev]"]
 
 [project.scripts]
-grizli-demo = "demo:main"
-grizli-train = "train:main"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
-
-[tool.black]
-line-length = 100
-target-version = ["py39", "py310", "py311"]
+grizli-serve = "backend.main:main"
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "W", "I", "N", "B", "C4"]
-ignore = ["E501"]
+target-version = "py310"
+select = ["E", "F", "I", "W"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-addopts = "-v --tb=short"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]

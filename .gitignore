@@ -1,4 +1,4 @@
-# GRIZLI .gitignore
+# GrizliV2 .gitignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -159,3 +159,9 @@ config.local.yaml
 # Keep data directory structure
 !data/.gitkeep
 !models/.gitkeep
+!models/checkpoints/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local

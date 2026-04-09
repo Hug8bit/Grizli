@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #0a0f1e;
+  --color-surface: #111827;
+  --color-surface-2: #1f2937;
+  --color-accent: #22d3ee;
+  --color-accent-2: #a78bfa;
+  --color-danger: #f87171;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+}
+
+/* Grid visualization canvas */
+.grid-canvas {
+  background: radial-gradient(ellipse at 50% 50%, #0f1729 0%, #0a0f1e 100%);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+}
+
+/* Animated line for active power flow */
+.line-flow-animated {
+  stroke-dasharray: 8 4;
+  animation: flow 1s linear infinite;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -12; }
+}
+
+/* Bus voltage color coding */
+.bus-normal    { fill: #22d3ee; }
+.bus-high-v    { fill: #fbbf24; }
+.bus-low-v     { fill: #f87171; }
+.bus-overload  { fill: #ef4444; }
+
+/* Metric card */
+.metric-card {
+  @apply bg-gray-900 border border-gray-700 rounded-xl p-4;
+  transition: border-color 0.2s;
+}
+.metric-card:hover {
+  border-color: var(--color-accent);
+}
+
+/* Training progress bar */
+.progress-bar {
+  @apply h-2 rounded-full bg-gray-700 overflow-hidden;
+}
+.progress-fill {
+  @apply h-full rounded-full bg-cyan-400;
+  transition: width 0.3s ease;
+}
