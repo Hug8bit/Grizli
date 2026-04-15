@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "source": "NREL SMART-DS v1.0 2018",
+    "location": "San Francisco CA \u2014 Substation P1R",
+    "feeders": [
+      "F20705 (5190 kW)",
+      "F20833 (6963 kW)",
+      "F20835 (3325 kW)"
+    ],
+    "voltage_kv": 12.47,
+    "frequency_hz": 60,
+    "solver": "OpenDSS via dss-python 0.15.7",
+    "optimizer": "GRIZLI greedy branch-exchange + load balancing via tie-line reconfiguration"
+  },
+  "aggregate": {
+    "nominal_0.5x": {
+      "load_kw": 7738,
+      "losses_kw": 298.21,
+      "loss_pct": 1.9267,
+      "vmin": 0.9704,
+      "v_violations": 0,
+      "overloads": 0,
+      "max_loading": 80.8
+    },
+    "stress_0.75x": {
+      "losses_kw": 511.11,
+      "load_kw": 15477,
+      "loss_pct": 3.3023,
+      "vmin": 0.9342,
+      "v_violations": 171,
+      "overloads": 3,
+      "max_loading": 123.4
+    },
+    "optimized": {
+      "load_kw": 10766.0,
+      "losses_kw": 423.91,
+      "loss_pct": 2.739,
+      "vmin": 0.9635,
+      "v_violations": 0,
+      "overloads": 1,
+      "max_loading": 141.0
+    }
+  },
+  "per_feeder": {
+    "20705": {
+      "losses_kw": 140.021,
+      "load_kw": 4411.8,
+      "vmin": 0.9865,
+      "v_viol": 0,
+      "max_loading": 141.0,
+      "overloads": 1
+    },
+    "20833": {
+      "losses_kw": 174.776,
+      "load_kw": 4525.7,
+      "vmin": 0.98,
+      "v_viol": 0,
+      "max_loading": 89.9,
+      "overloads": 0
+    },
+    "20835": {
+      "losses_kw": 109.117,
+      "load_kw": 1828.5,
+      "vmin": 0.9635,
+      "v_viol": 0,
+      "max_loading": 77.2,
+      "overloads": 0
+    }
+  },
+  "load_multipliers": {
+    "20705": 0.85,
+    "20833": 0.65,
+    "20835": 0.55
+  },
+  "optimization_summary": {
+    "algorithm": "GRIZLI greedy branch-exchange + load balancing",
+    "loss_reduction_pct": 17.061,
+    "violations_resolved": 171,
+    "overloads_resolved": 2,
+    "load_transferred_pct": -98.9
+  }
+}
