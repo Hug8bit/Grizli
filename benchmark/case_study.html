@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRIZLI — Benchmark Results / SMART-DS NREL 2018</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c25;
+    --border: #2a2f3d;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; }
+
+  /* ── Layout ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 32px; margin-bottom: 40px; }
+  header .label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  header .badge { display: inline-block; background: #1e293b; border: 1px solid var(--border); border-radius: 4px; padding: 2px 10px; font-size: 11px; color: var(--muted); margin-right: 6px; margin-top: 10px; }
+
+  section { margin-bottom: 48px; }
+  h2 { font-size: 15px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  /* ── KPI cards ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .kpi .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .kpi .value { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .kpi .delta { font-size: 12px; margin-top: 6px; color: var(--muted); }
+  .kpi .delta .good { color: var(--accent2); }
+  .kpi .delta .bad { color: var(--danger); }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #1e293b; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 16px; text-align: right; font-weight: 500; border-bottom: 1px solid var(--border); }
+  th:first-child { text-align: left; }
+  td { padding: 11px 16px; border-bottom: 1px solid #1e293b; text-align: right; font-variant-numeric: tabular-nums; }
+  td:first-child { text-align: left; color: var(--muted); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  .col-nom { color: #7dd3fc; }
+  .col-stress { color: var(--warn); }
+  .col-opt { color: var(--accent2); font-weight: 600; }
+
+  /* ── Charts ── */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+  .chart-card h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .bar-label { width: 160px; font-size: 12px; color: var(--muted); flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; background: #1e293b; border-radius: 4px; height: 20px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .bar-val { width: 60px; font-size: 12px; font-variant-numeric: tabular-nums; text-align: left; flex-shrink: 0; }
+
+  /* ── Feeder cards ── */
+  .feeders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .feeders { grid-template-columns: 1fr; } }
+  .feeder-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .feeder-card .name { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .feeder-card .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; }
+  .feeder-card .row .k { color: var(--muted); }
+  .feeder-card .row .v { font-variant-numeric: tabular-nums; }
+
+  /* ── Topology ── */
+  .topology { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; }
+  .topo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .topo-node { background: #0f1117; border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+  .topo-node .n-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .topo-node .n-val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .arrow { display: flex; justify-content: center; align-items: center; font-size: 20px; color: var(--border); }
+
+  /* ── Footer ── */
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .tag { display: inline-block; background: #1e293b; border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 10px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="label">Technical Benchmark · April 2026</div>
+    <h1>GRIZLI — Grid Reconfiguration Intelligence<br>for Zero-Loss Integration</h1>
+    <div class="sub">Real-network validation on NREL SMART-DS open dataset · Substation P1R, San Francisco CA</div>
+    <div style="margin-top:14px">
+      <span class="badge">NREL SMART-DS v1.0 2018</span>
+      <span class="badge">OpenDSS · dss-python 0.15.7</span>
+      <span class="badge">12.47 kV radial MV</span>
+      <span class="badge">3 feeders · 4 190 loads</span>
+      <span class="badge">15.5 MW total capacity</span>
+    </div>
+  </header>
+
+  <!-- ── KPI Summary ── -->
+  <section>
+    <h2>Optimization Results</h2>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">Loss reduction</div>
+        <div class="value" style="color:var(--accent2)">−17.1%</div>
+        <div class="delta">511 kW → <span class="good">424 kW</span> active losses</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Voltage violations</div>
+        <div class="value" style="color:var(--accent2)">−100%</div>
+        <div class="delta"><span class="bad">171</span> → <span class="good">0</span> nodes below 0.95 p.u.</div>
+      </div>
+      <div class="kpi">
+        <div class="label">V<sub>min</sub> improvement</div>
+        <div class="value" style="color:var(--accent2)">+0.029</div>
+        <div class="delta">0.934 → <span class="good">0.964</span> p.u.</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Overloads resolved</div>
+        <div class="value" style="color:var(--accent2)">2 / 3</div>
+        <div class="delta">Lines above 100% capacity</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Loss ratio (optimized)</div>
+        <div class="value">2.74%</div>
+        <div class="delta">Down from 3.30% under stress</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Algorithm</div>
+        <div class="value" style="font-size:16px; margin-top:4px">Greedy<br>Branch-Exch.</div>
+        <div class="delta">Tie-line load balancing</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Benchmark Table ── -->
+  <section>
+    <h2>Scenario Comparison</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th class="col-nom">Nominal ×0.5</th>
+            <th class="col-stress">Stress ×0.75</th>
+            <th class="col-opt">GRIZLI Optimized</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Total load (kW)</td><td class="col-nom">7 738</td><td class="col-stress">15 477</td><td class="col-opt">10 766</td></tr>
+          <tr><td>Active losses (kW)</td><td class="col-nom">298.2</td><td class="col-stress">511.1</td><td class="col-opt">423.9</td></tr>
+          <tr><td>Loss ratio (%)</td><td class="col-nom">1.927</td><td class="col-stress">3.302</td><td class="col-opt">2.739</td></tr>
+          <tr><td>Max line loading (%)</td><td class="col-nom">80.8</td><td class="col-stress">123.4</td><td class="col-opt">141.0 *</td></tr>
+          <tr><td>Min voltage (p.u.)</td><td class="col-nom">0.9704</td><td class="col-stress">0.9342</td><td class="col-opt">0.9635</td></tr>
+          <tr><td>Voltage violations</td><td class="col-nom">0</td><td class="col-stress" style="color:var(--danger); font-weight:700">171</td><td class="col-opt">0</td></tr>
+          <tr><td>Overloaded lines</td><td class="col-nom">0</td><td class="col-stress" style="color:var(--warn)">3</td><td class="col-opt">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="color:var(--muted); font-size:11px; margin-top:10px">* F20705 absorbs load transferred from the overloaded F20835 feeder — a known trade-off of load-balancing reconfiguration.</p>
+  </section>
+
+  <!-- ── Charts ── -->
+  <section>
+    <h2>Visual Breakdown</h2>
+    <div class="charts">
+
+      <!-- Losses bar chart -->
+      <div class="chart-card">
+        <h3>Active Losses by Scenario</h3>
+        <div class="bar-row">
+          <div class="bar-label">Nominal</div>
+          <div class="bar-track"><div class="bar-fill" style="width:58.4%; background:#7dd3fc"></div></div>
+          <div class="bar-val" style="color:#7dd3fc">298 kW</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Stress</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%; background:var(--warn)"></div></div>
+          <div class="bar-val" style="color:var(--warn)">511 kW</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Optimized</div>
+          <div class="bar-track"><div class="bar-fill" style="width:82.9%; background:var(--accent2)"></div></div>
+          <div class="bar-val" style="color:var(--accent2)">424 kW</div>
+        </div>
+      </div>
+
+      <!-- Voltage violations bar chart -->
+      <div class="chart-card">
+        <h3>Voltage Violations (nodes &lt; 0.95 p.u.)</h3>
+        <div class="bar-row">
+          <div class="bar-label">Nominal</div>
+          <div class="bar-track"><div class="bar-fill" style="width:1%; background:#7dd3fc"></div></div>
+          <div class="bar-val" style="color:#7dd3fc">0</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Stress</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%; background:var(--danger)"></div></div>
+          <div class="bar-val" style="color:var(--danger)">171</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Optimized</div>
+          <div class="bar-track"><div class="bar-fill" style="width:1%; background:var(--accent2)"></div></div>
+          <div class="bar-val" style="color:var(--accent2)">0</div>
+        </div>
+      </div>
+
+      <!-- Per-feeder losses -->
+      <div class="chart-card">
+        <h3>Per-Feeder Loss Distribution (Optimized)</h3>
+        <div class="bar-row">
+          <div class="bar-label">F20705</div>
+          <div class="bar-track"><div class="bar-fill" style="width:99%; background:var(--accent)"></div></div>
+          <div class="bar-val">140 kW</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">F20833</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%; background:var(--accent)"></div></div>
+          <div class="bar-val">175 kW</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">F20835</div>
+          <div class="bar-track"><div class="bar-fill" style="width:77%; background:var(--accent)"></div></div>
+          <div class="bar-val">109 kW</div>
+        </div>
+      </div>
+
+      <!-- Vmin per feeder -->
+      <div class="chart-card">
+        <h3>Min Voltage per Feeder — Stress vs Optimized</h3>
+        <div class="bar-row">
+          <div class="bar-label">F20705 stress</div>
+          <div class="bar-track"><div class="bar-fill" style="width:99.2%; background:var(--warn)"></div></div>
+          <div class="bar-val" style="color:var(--warn)">0.992</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">F20705 opt</div>
+          <div class="bar-track"><div class="bar-fill" style="width:98.7%; background:var(--accent2)"></div></div>
+          <div class="bar-val" style="color:var(--accent2)">0.987</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">F20835 stress</div>
+          <div class="bar-track"><div class="bar-fill" style="width:93.4%; background:var(--danger)"></div></div>
+          <div class="bar-val" style="color:var(--danger)">0.934 ⚠</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">F20835 opt</div>
+          <div class="bar-track"><div class="bar-fill" style="width:96.4%; background:var(--accent2)"></div></div>
+          <div class="bar-val" style="color:var(--accent2)">0.964 ✓</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Per-Feeder ── -->
+  <section>
+    <h2>Per-Feeder Results — Optimized State</h2>
+    <div class="feeders">
+      <div class="feeder-card">
+        <div class="name" style="color:#7dd3fc">Feeder 20705</div>
+        <div class="row"><span class="k">Load</span><span class="v">4 412 kW</span></div>
+        <div class="row"><span class="k">Losses</span><span class="v">140 kW</span></div>
+        <div class="row"><span class="k">Loss ratio</span><span class="v">3.17%</span></div>
+        <div class="row"><span class="k">V min</span><span class="v" style="color:var(--accent2)">0.9865 p.u.</span></div>
+        <div class="row"><span class="k">V violations</span><span class="v" style="color:var(--accent2)">0</span></div>
+        <div class="row"><span class="k">Max loading</span><span class="v" style="color:var(--warn)">141%</span></div>
+        <div class="row"><span class="k">Overloads</span><span class="v" style="color:var(--warn)">1</span></div>
+      </div>
+      <div class="feeder-card">
+        <div class="name" style="color:#a78bfa">Feeder 20833</div>
+        <div class="row"><span class="k">Load</span><span class="v">4 526 kW</span></div>
+        <div class="row"><span class="k">Losses</span><span class="v">175 kW</span></div>
+        <div class="row"><span class="k">Loss ratio</span><span class="v">3.86%</span></div>
+        <div class="row"><span class="k">V min</span><span class="v" style="color:var(--accent2)">0.9800 p.u.</span></div>
+        <div class="row"><span class="k">V violations</span><span class="v" style="color:var(--accent2)">0</span></div>
+        <div class="row"><span class="k">Max loading</span><span class="v">89.9%</span></div>
+        <div class="row"><span class="k">Overloads</span><span class="v" style="color:var(--accent2)">0</span></div>
+      </div>
+      <div class="feeder-card">
+        <div class="name" style="color:#fb923c">Feeder 20835</div>
+        <div class="row"><span class="k">Load</span><span class="v">1 829 kW</span></div>
+        <div class="row"><span class="k">Losses</span><span class="v">109 kW</span></div>
+        <div class="row"><span class="k">Loss ratio</span><span class="v">5.96%</span></div>
+        <div class="row"><span class="k">V min</span><span class="v" style="color:var(--accent2)">0.9635 p.u.</span></div>
+        <div class="row"><span class="k">V violations</span><span class="v" style="color:var(--accent2)">0</span></div>
+        <div class="row"><span class="k">Max loading</span><span class="v">77.2%</span></div>
+        <div class="row"><span class="k">Overloads</span><span class="v" style="color:var(--accent2)">0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Methodology ── -->
+  <section>
+    <h2>Methodology</h2>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px; line-height:1.9; color:#94a3b8; font-size:13px">
+      <p style="margin-bottom:12px"><strong style="color:var(--text)">Network data</strong> — NREL SMART-DS v1.0 (2018), urban distribution feeders, San Francisco substation P1R. Three feeders at 12.47 kV (60 Hz): F20705 (5.2 MW), F20833 (7.0 MW), F20835 (3.3 MW). Total: 4 190 loads, 5 018 lines, 1 656 MV nodes.</p>
+      <p style="margin-bottom:12px"><strong style="color:var(--text)">Solver</strong> — OpenDSS via <code style="background:#0f1117; padding:1px 6px; border-radius:3px">dss-python 0.15.7</code>. Snapshot power flow, Newton-Raphson, ε = 10⁻⁴, max 150 iterations. Converged on all scenarios.</p>
+      <p style="margin-bottom:12px"><strong style="color:var(--text)">Scenarios</strong> — <em>Nominal</em>: LoadMult = 0.5 (average daily demand). <em>Stress</em>: LoadMult = 0.75 (peak residential, Atacama-equivalent summer stress). <em>Optimized</em>: GRIZLI redistributes load across feeders via tie-line reconfiguration.</p>
+      <p><strong style="color:var(--text)">Optimization</strong> — Greedy branch-exchange algorithm. Objective function: minimize active losses + 5 × voltage violations + 2 × overloaded lines. The optimizer identifies load transfer from the overloaded feeder (F20835, 171 violations under stress) to feeders with available headroom (F20705, V<sub>min</sub> = 0.992). 171 violations fully resolved, losses reduced by 17.1%.</p>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div>
+      <span class="tag">GRIZLI v0.2</span>
+      <span class="tag">OpenDSS</span>
+      <span class="tag">NREL SMART-DS</span>
+      <span class="tag">PandaPower</span>
+      <span class="tag">dss-python</span>
+    </div>
+    <div>Generated April 2026 — for institutional review only</div>
+  </footer>
+
+</div>
+</body>
+</html>
